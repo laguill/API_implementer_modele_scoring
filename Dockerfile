@@ -27,4 +27,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
 
-CMD ["marimo", "run", "app.py", "--include-code", "--host", "0.0.0.0", "--port", "7860", "--no-token"]
+CMD ["marimo", "run", "marimo.py", "--include-code", "--host", "0.0.0.0", "--port", "7860", "--no-token"]

@@ -28,8 +28,9 @@ jobs:
           colorTo: blue
           sdk: docker
           sdk_version: "latest"
-          app_file: app.py  # Le fichier qui lance ton API ou interface
+          app_file: marimo.py
           pinned: true
+          short_description: Prédire clients à risque pour l'obtention d'un crédit.
           ---
           "
             echo "$FRONTMATTER$(cat README.md)" > README.md

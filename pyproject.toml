@@ -1,0 +1,27 @@
+[project]
+name = "credit-scoring"
+version = "0.1.0"
+description = "API pour implementer un modele de scoring. Projet 7 Openclassrooms - Formation Datascientist"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [ { name = "Guillaume LAFON", email = "guillaumelafon13@gmail.com" } ]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi[standard]>=0.116.1",
+    "joblib>=1.5.1",
+    "lightgbm>=4.6.0",
+    "marimo>=0.14.16",
+    "numpy>=2.3.2",
+    "pandas>=2.3.1",
+    "scikit-learn>=1.7.1",
+    "uvicorn>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.1",
+    "mypy>=1.17.1",
+    "python-lsp-ruff>=2.2.2",
+    "python-lsp-server>=1.13.0",
+    "pytest>=8.4.1",
+]

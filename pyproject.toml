@@ -8,13 +8,23 @@ authors = [ { name = "Guillaume LAFON", email = "guillaumelafon13@gmail.com" } ]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi[standard]>=0.116.1",
-    "joblib>=1.5.1",
-    "lightgbm>=4.6.0",
     "marimo>=0.14.16",
-    "numpy>=2.3.2",
-    "pandas>=2.3.1",
-    "scikit-learn>=1.7.1",
     "uvicorn>=0.35.0",
+    "mlflow==3.1.4",
+    "cffi==1.17.1",
+    "cloudpickle==3.1.1",
+    "defusedxml==0.7.1",
+    "imbalanced-learn==0.13.0",
+    "lightgbm==4.6.0",
+    "matplotlib==3.10.0",
+    "numpy==2.1.3",
+    "pandas==2.3.1",
+    "psutil==7.0.0",
+    "pyarrow==20.0.0",
+    "pytest==8.4.1",
+    "scikit-learn==1.6.1",
+    "scipy==1.15.3",
+    "requests>=2.32.4",
 ]
 
 [dependency-groups]

@@ -18,6 +18,13 @@ jobs:
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
+
+      - name: Install Git LFS
+        run: git lfs install
+
+      - name: Pull LFS files
+        run: git lfs pull
+
       - name: Prepend frontmatter to README
         run: |
           if [ -f README.md ] && ! grep -q "^---" README.md; then

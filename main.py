@@ -32,8 +32,13 @@ logger.info(f"Mounting {len(app_names)} Marimo apps")
 for name in app_names:
     logger.info(f"  /{name}")
 
-# Montage des apps Marimo sous /dashboard
-app.mount("/pages", server.build())
+app.mount("/dashboard", server.build())
+
+# Endpoint pour lister les dashboards disponibles
+@app.get("/dashboards", summary="List available dashboards")
+def list_dashboards():
+    dashboards = [f"/dashboard/{name}" for name in app_names]
+    return JSONResponse(content={"available_dashboards": dashboards})
 
 if __name__ == "__main__":
     import uvicorn

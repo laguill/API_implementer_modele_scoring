@@ -1,45 +1,39 @@
 from fastapi import FastAPI
-import marimo
 from app.api import register_routes
-import logging
+import marimo
 from pathlib import Path
+import logging
 
-# Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Répertoire contenant les notebooks Marimo
-PAGES_DIR = Path(__file__).parent / "pages"
+app = FastAPI(
+    title="Credit Scoring API",
+    description="API to predict credit default risk and serving dashboards",
+    version="1.0.0"
+)
 
-# Création de l'app Marimo
-server = marimo.create_asgi_app(include_code=True)
-app_names: list[str] = []
-
-if PAGES_DIR.exists():
-    for filename in PAGES_DIR.iterdir():
-        if filename.is_file() and filename.suffix == ".py":
-            app_path = f"{PAGES_DIR.stem}/{filename.stem}"
-            server = server.with_app(path=f"/{app_path}", root=str(filename))
-            app_names.append(app_path)
-
-# Création de l'app FastAPI
-app = FastAPI(title="Credit Scoring API", version="1.0")
-
-# Enregistrement des routes FastAPI classiques
+# Load APi endpoints
 register_routes(app)
 
-logger.info(f"Mounting {len(app_names)} Marimo apps")
-for name in app_names:
-    logger.info(f"  /{name}")
+# Confifigure Marimo to server dashboards
+PAGES_DIR = Path(__file__).parent / "pages"
+server = marimo.create_asgi_app(include_code=True)
+pages = []
 
-app.mount("/dashboard", server.build())
+for file in PAGES_DIR.glob("*.py"):
+    page_name = file.stem
+    server = server.with_app(path=f"/{page_name}", root=str(file))
+    pages.append(page_name)
 
-# Endpoint pour lister les dashboards disponibles
-@app.get("/dashboards", summary="List available dashboards")
+logger.info(f"Mounting pages: {pages}")
+app.mount("/pages", server.build())
+
+# Endpoints to list dashboards
+@app.get("/pages", tags=["PAGES"])
 def list_dashboards():
-    dashboards = [f"/dashboard/{name}" for name in app_names]
-    return JSONResponse(content={"available_dashboards": dashboards})
+    return {"available_pages": [f"/page/{name}" for name in pages]}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860, log_level="info")
+    uvicorn.run(app, host="localhost", port=7860, log_level="info")

@@ -54,17 +54,19 @@ The model was designed, iterated, and optimized in [this notebook](https://githu
 
 ## 📂 Project Structure
 
+```bash
 ├── app/ # API routes and business logic
-│ ├── api.py
-│ └── init.py
+│   ├── __init__.py
+│   ├── api.py           # Define API endpoints
+│   ├── model.py         # Load model, encoding, scoring
+│   └── config.py        # Global variables (path, parameters)
 ├── model/ # Model and preprocessing artifacts
 │ ├── Best_LGBM_Model.pkl
 │ ├── encoders.pkl
 │ ├── customers_data.csv
 │ └── model_features.pkl
-├── pages/ # Marimo dashboard
-│ ├── dashboard.py
-│ └── marimo/
+├── dashboards/
+│ ├── dashboard.py # Marimo notebook
 ├── tests/ # Unit tests
 ├── main.py # FastAPI + dashboard entrypoint
 ├── Dockerfile # Docker config for HF Spaces
@@ -73,3 +75,4 @@ The model was designed, iterated, and optimized in [this notebook](https://githu
 ├── justfile # Task runner for common commands
 ├── development.md # Local development instructions
 └── .github/workflows/ # CI/CD to sync with HF Space
+```

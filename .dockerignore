@@ -1,0 +1,15 @@
+# Virtual environment
+.env/
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+.docker
+
+# Marimo cache
+**/__marimo__/**

@@ -8,7 +8,7 @@ sdk_version: latest
 pinned: true
 license: mit
 app_file: main.py
-short_description: API and interactive dashboard to predict credit default risk.
+short_description: API and dashboard to predict credit default risk.
 thumbnail: https://cdn-uploads.huggingface.co/production/uploads/6891c75202359d4e3846cbec/uMnppPBtSc7waPZhjrTMc.png
 ---
 

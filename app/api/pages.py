@@ -20,7 +20,7 @@ def list_dashboards():
     return {"available_pages": [f"/pages/{name}" for name in pages]}
 
 # --- HTML endpoint (utile pour visiteurs humains) ---
-@router.get("/index", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/pages/index", response_class=HTMLResponse, include_in_schema=False)
 async def list_dashboards_html():
     links = "".join([f'<li><a href="/pages/{name}">{name}</a></li>' for name in pages])
     html_content = f"""

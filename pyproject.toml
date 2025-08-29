@@ -34,5 +34,84 @@ dev = [
     "mypy>=1.17.1",
     "python-lsp-ruff>=2.2.2",
     "python-lsp-server>=1.13.0",
+    "python-lsp-ruff>=2.2.2",
     "pytest>=8.4.1",
 ]
+
+[tool.marimo.runtime]
+pythonpath = ["."]
+dotenv = [".env", ".env.path"]
+
+[tool.marimo.experimental]
+lsp = true
+table_charts = true
+
+[tool.marimo.formatting]
+line_length = 120
+
+[tool.marimo.diagnostics]
+enabled = true
+
+[tool.ruff]
+line-length = 120
+extend-include = ["*.ipynb", "*.qmd"]
+
+[tool.ruff.format]
+preview = true
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN",     # Mypy is better at this
+    "COM",     # Formatter takes care of our commas
+    "E501",    # leave line-length enforcement to formatter
+    "T201",    # I am using print
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",    # D100-104 missing docstring
+    "D107",    # undocumented-public-init
+    "E402",    # unused import
+    "F401",
+    "INP001",  # missing __init__ in external library
+    "N803",    # variable name should be lower case do not apply in ML
+    "N806",    # same as above but for functions
+    "PLR1711", # Needed in marimo
+    "F821",     # ignore undefined name
+    "PLC0415"   # import should be at the top files. Not compatible with notebook
+]
+# Add the `line-too-long` rule to the enforced rule set.
+extend-select = ["W505"]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+lines-after-imports = 2
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 120
+
+[tool.mypy]
+# Prototypage
+check_untyped_defs = false    # Ne vérifie pas les fonctions non typées
+follow_imports = "skip"       # Ignore les modules importés
+ignore_missing_imports = true # Ignore les erreurs d'importations
+pretty = true                 # Enhance the readability of error messages
+show_column_numbers = true
+warn_unused_configs = true    # Alerte sur des options non reconnues
+
+[tool.basedpyright]
+reportAny = "none"                  # Disable checks for implicit Any
+reportExplicitAny = "none"          # Disable checks for explicit Any
+reportUnknownVariableType = "none"
+reportUnusedImport = "none"
+reportUnknownMemberType = "none"
+reportUnusedCallResult = "none"
+reportMissingTypeStubs = "none"
+reportMissingParameterType = "none"
+reportUnknownParameterType = "none"
+reportUnknownArgumentType = "none"

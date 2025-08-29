@@ -95,8 +95,11 @@ async def predict(client: ClientInput):
         X = preprocess_client(client.SK_ID_CURR)
 
         # Prédiction
-        proba = model.predict_proba(X)[0, 1]
-        prediction = int(proba > 0.5)
+        results = model.predict_proba(X)
+        result = model.predict(X)
+
+        good_customer_proba = float(results[0][0])
+        bad_customer_proba = float(results[0][1])
 
         translated_result = (
             "✅ Good customer, offer him his credit !"

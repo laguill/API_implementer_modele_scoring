@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.predict import router as api_router
 from app.api.pages import router as pages_router, pages
+
 from pathlib import Path
 import marimo
 import logging
@@ -22,6 +25,15 @@ app = FastAPI(
     title="Credit Scoring API",
     description="API to predict credit default risk and serve interactive dashboards",
     version="1.0.0"
+)
+
+# Ajout du middleware pour gérer CORS (Cross-Origin Resource Sharing)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Autorise toutes les origines
+    allow_credentials=True,
+    allow_methods=["*"],  # Autorise toutes les méthodes HTTP
+    allow_headers=["*"],  # Autorise tous les headers
 )
 
 # Charger les routes API principales

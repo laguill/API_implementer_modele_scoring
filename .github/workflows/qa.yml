@@ -1,0 +1,85 @@
+name: QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # --- Setup ---
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: uv sync
+      - run: just install
+
+  # --- Linting ---
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: uv sync
+      - run: just lint
+
+  # --- Typing ---
+  typing:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: uv sync
+      - run: just typing
+
+  # --- Tests ---
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: uv sync
+      - run: just test
+        env:
+          _UV_RUN_ARGS_TEST: "--cov=app --cov-report=xml"
+
+  # --- Coverage ---
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "uv"
+      - run: uv sync
+      - run: just cov
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov
+
+  # --- Check all ---
+  check-all:
+    needs: [lint, typing, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All checks passed!"

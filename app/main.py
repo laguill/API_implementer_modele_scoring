@@ -1,6 +1,7 @@
 import logging
 import os
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import marimo
@@ -12,6 +13,7 @@ from fastapi.responses import HTMLResponse
 
 from app.api.pages import pages
 from app.api.pages import router as pages_router
+from app.api.predict import init_artifacts
 from app.api.predict import router as api_router
 
 
@@ -26,11 +28,20 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 PORT = int(os.environ.get("PORT", 7860))  # noqa: PLW1508
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # pyright: ignore[reportUnusedParameter]  # noqa: ARG001
+    # Code exécuté au démarrage
+    init_artifacts()
+    yield  # L'application reste active ici
+
+
 # Application FastAPI
 app = FastAPI(
     title="Credit Scoring API",
     description="API to predict credit default risk and serve interactive dashboards",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Ajout du middleware pour gérer CORS (Cross-Origin Resource Sharing)

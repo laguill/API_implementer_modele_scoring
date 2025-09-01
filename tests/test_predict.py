@@ -2,7 +2,12 @@ import pytest
 
 from fastapi.testclient import TestClient
 
+from app.api.predict import init_artifacts  # Importe la fonction d'initialisation
 from app.main import app
+
+
+# Charge les artefacts avant les tests
+init_artifacts()
 
 
 client = TestClient(app)

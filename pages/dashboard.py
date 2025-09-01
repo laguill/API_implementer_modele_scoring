@@ -1,16 +1,22 @@
 import marimo
 
+
 __generated_with = "0.15.1"
 app = marimo.App()
 
 
 @app.cell
 def _():
+    import logging
+
+    from pathlib import Path
+
     import marimo as mo
     import pandas as pd
-    from pathlib import Path
     import requests
-    import logging
+
+    from requests.exceptions import RequestException
+
     return Path, logging, mo, pd, requests
 
 
@@ -27,7 +33,7 @@ def _(Path, logging, pd):
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
     )
-    logger = logging.getLogger(__name__)
+    logging.getLogger(__name__)
 
     MODELS_DIR = Path("models")
 
@@ -58,13 +64,13 @@ def _(customers_df, mo):
 def _(BASE_URL, client_dropdown, mo, requests, run):
     # logique déclenchée par le bouton
     panel = mo.output
-    panel  # affiche le conteneur
+    panel  # affiche le conteneur  # pyright: ignore[reportUnusedExpression]
 
     if run.value:
         payload = {"SK_ID_CURR": client_dropdown.value}
         try:
             resp = requests.post(BASE_URL, json=payload, timeout=15)
-            if resp.status_code == 200:
+            if resp.status_code == 200:  # noqa: PLR2004
                 panel.replace(
                     mo.ui.text_area(
                         str(resp.json()),
@@ -82,7 +88,7 @@ def _(BASE_URL, client_dropdown, mo, requests, run):
                         rows=8,
                     )
                 )
-        except Exception as e:
+        except RequestException as e:
             panel.replace(
                 mo.ui.text_area(
                     f"Erreur de connexion: {e}",

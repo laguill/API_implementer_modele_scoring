@@ -1,6 +1,8 @@
+import logging
+
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
-import logging
+
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
@@ -14,16 +16,18 @@ router = APIRouter(tags=["Pages"])
 # Variable partagée (remplie dans main.py)
 pages: list[str] = []
 
+
 @router.get("/pages")
 def list_dashboards():
-    """Retourne la liste des dashboards disponibles"""
+    """Retourne la liste des dashboards disponibles."""
     return {"available_pages": [f"/pages/{name}" for name in pages]}
+
 
 # --- HTML endpoint (utile pour visiteurs humains) ---
 @router.get("/pages/index", response_class=HTMLResponse, include_in_schema=False)
 async def list_dashboards_html():
     links = "".join([f'<li><a href="/pages/{name}">{name}</a></li>' for name in pages])
-    html_content = f"""
+    return f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -37,4 +41,3 @@ async def list_dashboards_html():
     </body>
     </html>
     """
-    return html_content

@@ -1,5 +1,10 @@
+set dotenv-load
+
+PORT := env("PORT", "7860")
+ARGS_TEST := env("_UV_RUN_ARGS_TEST", "")
+ARGS_SERVE := env("_UV_RUN_ARGS_SERVE", "")
+
 # Variables
-PORT := "7860"
 IMAGE_NAME := "credit-scoring-api"
 
 # Default target: show all commands
@@ -11,6 +16,31 @@ IMAGE_NAME := "credit-scoring-api"
 demo:
     docker build --network=host -t {{IMAGE_NAME}} .
     docker run -it --rm -p {{PORT}}:{{PORT}} {{IMAGE_NAME}}
+
+# Developp app locally
+[group('run')]
+start-api:
+    uv run uvicorn app.main:app --port 7860 --reload
+
+# Run tests
+[group('qa')]
+test *args:
+    uv run {{ ARGS_TEST }} -m pytest {{ args }}
+
+_cov *args:
+    uv run -m coverage {{ args }}
+
+# Run tests and measure coverage
+[group('qa')]
+@cov:
+    just _cov erase
+    just _cov run -m pytest tests
+    # Ensure ASGI entrypoint is importable.
+    # You can also use coverage to run your CLI entrypoints.
+    just _cov run -m app.asgi
+    just _cov combine
+    just _cov report
+    just _cov html
 
 # Run linters
 [group('qa')]
@@ -25,7 +55,7 @@ typing:
 
 # Perform all checks
 [group('qa')]
-check-all: lint typing
+check-all: lint cov typing
 
 # Update dependencies
 [group('lifecycle')]

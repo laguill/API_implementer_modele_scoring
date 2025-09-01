@@ -1,10 +1,13 @@
-from fastapi import APIRouter, HTTPException
-from pathlib import Path
-from pydantic import BaseModel
-from pathlib import Path
-import pickle
-import pandas as pd
 import logging
+import pickle
+
+from pathlib import Path
+
+import pandas as pd
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
 
 # Logging config
 logging.basicConfig(
@@ -14,6 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["Prediction"])
+
 
 # Input model
 class ClientInput(BaseModel):
@@ -28,14 +32,14 @@ ENCODERS_PATH = MODELS_DIR / "encoders.pkl"
 FEATURES_PATH = MODELS_DIR / "model_features.pkl"
 CUSTOMERS_PATH = MODELS_DIR / "customers_data.csv"
 
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
+with Path.open(MODEL_PATH, "rb") as f:
+    model = pickle.load(f)  # noqa: S301
 
-with open(ENCODERS_PATH, "rb") as f:
-    encoders = pickle.load(f)
+with Path.open(ENCODERS_PATH, "rb") as f:
+    encoders = pickle.load(f)  # noqa: S301
 
-with open(FEATURES_PATH, "rb") as f:
-    model_features = pickle.load(f)
+with Path.open(FEATURES_PATH, "rb") as f:
+    model_features = pickle.load(f)  # noqa: S301
 
 customers_df = pd.read_csv(CUSTOMERS_PATH, index_col="SK_ID_CURR")
 
@@ -45,30 +49,32 @@ logger.info("Model, encoders and customer data loaded successfully")
 # Helper function to preprocess a client
 def preprocess_client(client_id: int):
     if client_id not in customers_df.index:
-        raise ValueError(f"Client ID {SK_ID_CURR} not found")
+        msg = f"Client ID {client_id} not found"
+        raise ValueError(msg)
 
-    client_data = customers_df.loc[[client_id]].copy()  # dataframe d’une seule ligne
+    client_data = customers_df.loc[[client_id]].copy()  # dataframe dune seule ligne
 
     # Appliquer les encoders
     for col, enc in encoders.items():
-        if col in client_data.columns:
-            if hasattr(enc, "transform"):  # LabelEncoder ou OneHotEncoder
-                try:
+        if col in client_data.columns and hasattr(enc, "transform"):  # LabelEncoder ou OneHotEncoder
+            try:
+                if enc.__class__.__name__ == "LabelEncoder":
+                    # 1D array attendu
+                    transformed = enc.transform(client_data[col])
+                    client_data[col] = transformed
+                else:
+                    # OneHotEncoder (ou autre encoder) → 2D array attendu
                     transformed = enc.transform(client_data[[col]])
-                    if transformed.ndim == 1:  # LabelEncoder
-                        client_data[col] = transformed
-                    else:  # OneHotEncoder
-                        # créer colonnes OHE
-                        ohe_df = pd.DataFrame(
-                            transformed,
-                            columns=[f"{col}_{c}" for c in enc.categories_[0]],
-                            index=client_data.index,
-                        )
-                        client_data.drop(columns=[col], inplace=True)
-                        client_data = pd.concat([client_data, ohe_df], axis=1)
-                except Exception as e:
-                    logger.error(f"Encoding failed for column {col}: {e}")
-                    raise
+                    ohe_df = pd.DataFrame(
+                        transformed,
+                        columns=[f"{col}_{c}" for c in enc.categories_[0]],  # pyright: ignore[reportArgumentType]
+                        index=client_data.index,
+                    )
+                    client_data = client_data.drop(columns=[col])
+                    client_data = pd.concat([client_data, ohe_df], axis=1)
+            except Exception:
+                logger.exception(f"Encoding failed for column {col}")  # noqa: G004
+                raise
 
     # Garder uniquement les colonnes attendues par le modèle
     missing_cols = [c for c in model_features if c not in client_data.columns]
@@ -79,16 +85,17 @@ def preprocess_client(client_id: int):
 
     return client_data
 
+
 # Prediction endpoint
 @router.post("/predict", summary="Predict credit default risk for a client")
 async def predict(client: ClientInput):
     try:
         # Vérifie si l'ID existe dans la base
         if client.SK_ID_CURR not in customers_df.index:
-            raise HTTPException(
+            raise HTTPException(  # noqa: TRY301
                 status_code=404,
-                detail=f"❌ Client ID {client.SK_ID_CURR} not found in database. "
-                       f"Please provide a valid SK_ID_CURR."
+                detail=f"""❌ Client ID {client.SK_ID_CURR} not found in database.
+                        Please provide a valid SK_ID_CURR.""",
             )
 
         # Prétraitement
@@ -102,21 +109,16 @@ async def predict(client: ClientInput):
         bad_customer_proba = float(results[0][1])
 
         translated_result = (
-            "✅ Good customer, offer him his credit !"
-            if result == 0
-            else "⚠️ Bad customer, offer him a coffee !"
+            "✅ Good customer, offer him his credit !" if result == 0 else "⚠️ Bad customer, offer him a coffee !"
         )
 
-        return {
+        return {  # noqa: TRY300
             "client_id": client.SK_ID_CURR,
             "probability_good_customer": good_customer_proba,
             "probability_bad_customer": bad_customer_proba,
             "result": translated_result,
         }
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"🚨 Prediction failed for client {client.SK_ID_CURR}: {str(e)}"
-        )
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"🚨 Prediction failed for client {client.SK_ID_CURR}: {e!s}")  # noqa: B904

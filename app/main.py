@@ -1,30 +1,36 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.api.predict import router as api_router
-from app.api.pages import router as pages_router, pages
-
-from pathlib import Path
-import marimo
 import logging
 import os
+
+from pathlib import Path
+
+import marimo
+
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+
+from app.api.pages import pages
+from app.api.pages import router as pages_router
+from app.api.predict import router as api_router
+
 
 # Logging
-logging.basicConfig(level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # Variables d'environnement
 load_dotenv()
-PORT = int(os.environ.get("PORT", 7860))
+PORT = int(os.environ.get("PORT", 7860))  # noqa: PLW1508
 
 # Application FastAPI
 app = FastAPI(
     title="Credit Scoring API",
     description="API to predict credit default risk and serve interactive dashboards",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Ajout du middleware pour gérer CORS (Cross-Origin Resource Sharing)
@@ -37,15 +43,17 @@ app.add_middleware(
 )
 
 # Charger les routes API principales
-app.include_router(api_router) # API endpoints (predictions, etc)
+app.include_router(api_router)  # API endpoints (predictions, etc)
 
 # Marimo dashboards
 app.include_router(pages_router)
+
 
 # Health check endpoint (API-friendly)
 @app.get("/health", tags=["System"])
 async def health_check():
     return {"status": "ok", "message": "Credit Scoring API is running"}
+
 
 # Configurer Marimo
 PAGES_DIR = Path(__file__).parent.parent / "pages"
@@ -57,13 +65,14 @@ if PAGES_DIR.exists():
         server = server.with_app(path=f"/{page_name}", root=str(file))
         pages.append(page_name)
 
-    logger.info(f"Mounting dashboards: {pages}")
+    logger.info(f"Mounting dashboards: {pages}")  # noqa: G004
     # Montage de l'app ASGI Marimo
     app.mount("/pages", server.build())
 else:
     logger.warning("No pages directory found, skipping dashboard mounting")
 
-# Homepage (human-friendly)
+
+# Homepage (human-friendly)  # noqa: ERA001
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def home():
     return """
@@ -86,7 +95,9 @@ async def home():
     </html>
     """
 
+
 # Point d'entrée local
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=PORT, reload=True)
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=PORT, reload=True)  # noqa: S104

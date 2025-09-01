@@ -16,6 +16,13 @@ thumbnail: https://cdn-uploads.huggingface.co/production/uploads/6891c75202359d4
 
 ![](logo.png)
 
+<p align="left">
+  <!-- Badge CI QA (tests, lint, typing) -->
+  <img src="https://github.com/laguill/API_implementer_modele_scoring/actions/workflows/qa.yml/badge.svg" alt="CI QA" />
+
+  <img src="https://img.shields.io/github/actions/workflow/status/laguill/API_implementer_modele_scoring/hf_sync.yml?branch=main&label=HF%20Sync&logo=huggingface&style=for-the-badge" alt="HF Sync" />
+</p>
+
 This Hugging Face Space demonstrates a credit default risk scoring model built from the [Home Credit Default Risk (Kaggle)](https://www.kaggle.com/c/home-credit-default-risk/data) dataset.
 
 The goal is to **predict whether a client will repay their credit or default**.

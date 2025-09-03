@@ -1,5 +1,6 @@
 import marimo
 
+
 __generated_with = "0.15.2"
 app = marimo.App()
 
@@ -11,11 +12,13 @@ def _():
     from pathlib import Path
 
     import marimo as mo
+    import matplotlib.pyplot as plt
     import pandas as pd
     import requests
     import seaborn as sns
-    import matplotlib.pyplot as plt
+
     from requests.exceptions import RequestException
+
     return Path, RequestException, mo, pd, plt, requests
 
 
@@ -46,7 +49,7 @@ def _(Path, pd):
 
 @app.cell
 def _(customers_df, mo):
-    #BASE_URL = "http://localhost:7860/api/v1/predict"
+    # BASE_URL = "http://localhost:7860/api/v1/predict"  # noqa: ERA001
     BASE_URL = "https://laguill-implementer-model-scoring.hf.space/api/v1/predict"
 
     client_dropdown = mo.ui.dropdown(
@@ -63,14 +66,14 @@ def _(customers_df, mo):
 def _(BASE_URL, RequestException, client_dropdown, mo, requests, run):
     # logique déclenchée par le bouton
     panel = mo.output
-    panel  # affiche le conteneur
+    panel  # affiche le conteneur  # pyright: ignore[reportUnusedExpression]
 
     with mo.status.spinner(subtitle="Loading data ...") as _spinner:
         if run.value:
             payload = {"SK_ID_CURR": client_dropdown.value}
             try:
                 resp = requests.post(BASE_URL, json=payload, timeout=15)
-                if resp.status_code == 200:
+                if resp.status_code == 200:  # noqa: PLR2004
                     panel.replace(
                         mo.ui.text_area(
                             str(resp.json()),
@@ -99,7 +102,7 @@ def _(BASE_URL, RequestException, client_dropdown, mo, requests, run):
                 )
         else:
             panel.replace(mo.md("Cliquez sur le bouton pour lancer la prédiction."))
-    return (resp,)
+    return (resp,)  # pyright: ignore[reportPossiblyUnboundVariable]
 
 
 @app.cell
@@ -123,7 +126,7 @@ def _(mo, plt, resp):
 
     # Création d'un graphique pour visualiser les probabilités
     plt.figure(figsize=(6, 4))
-    plt.bar(["Bon client", "Mauvais client"], [prob_good, prob_bad], color=['green', 'red'])
+    plt.bar(["Bon client", "Mauvais client"], [prob_good, prob_bad], color=["green", "red"])
     plt.title(f"Probabilités pour le client {client_id}")
     plt.ylabel("Probabilité")
     plt.ylim(0, 1)

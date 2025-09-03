@@ -98,7 +98,8 @@ ignore = [
     "PLR1711", # Needed in marimo
     "F821",     # ignore undefined name
     "PLC0415",   # import should be at the top files. Not compatible with notebook
-    "B018"      # Ignore commented code
+    "B018",      # Ignore commented code
+    "PLR0913"
 ]
 # Add the `line-too-long` rule to the enforced rule set.
 extend-select = ["W505"]

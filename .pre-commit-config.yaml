@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: just-check-all
+        name: Run just check-all
+        entry: just check-all
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

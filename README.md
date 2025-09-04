@@ -14,7 +14,7 @@ thumbnail: https://cdn-uploads.huggingface.co/production/uploads/6891c75202359d4
 
 # 🏦 Implement Scoring Model API
 
-![](logo.png)
+![](pages/public/logo.png)
 
 <p align="left">
   <!-- Badge CI QA (tests, lint, typing) -->
@@ -102,6 +102,7 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/laguill/API_implementer_modele_scoring.git
 cd API_implementer_modele_scoring
+just install
 just start-api
 ```
 

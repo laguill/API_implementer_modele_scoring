@@ -30,6 +30,8 @@ dependencies = [
     "types-requests>=2.32.4.20250809",
     "openai>=1.102.0",
     "seaborn>=0.13.2",
+    "plotly>=6.3.0",
+    "shap[plots]>=0.48.0",
 ]
 
 [dependency-groups]

@@ -173,7 +173,8 @@ async def check_client(client_id: int):
 async def get_client_info(client_id: int):
     if client_id not in customers_df.index:
         raise HTTPException(status_code=404, detail="Client not found")
-    return customers_df.loc[client_id].to_dict()
+
+    return customers_df.loc[client_id].replace({np.nan: None}).to_dict()
 
 
 @router.get("/global_feature_importance")
@@ -204,9 +205,11 @@ async def shap_summary_plot(client_id: int):
         raise HTTPException(status_code=404, detail="Client not found")
 
     X = preprocess_client(client_id)
-    shap_values = explainer(X, check_additivity=False)
+    shap_values = explainer(X)
 
-    shap.summary_plot(shap_values.values, X, plot_type="bar", max_display=10, show=False)
+    shap.plots.waterfall(shap_values[0], max_display=10, show=False)
+    plt.tight_layout()
+
     buf = BytesIO()
     plt.savefig(buf, format="png")
     plt.close()

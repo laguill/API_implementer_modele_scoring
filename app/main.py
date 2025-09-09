@@ -71,7 +71,7 @@ PAGES_DIR = Path(__file__).parent.parent / "pages"
 server = marimo.create_asgi_app(include_code=True)
 
 if PAGES_DIR.exists():
-    for file in PAGES_DIR.glob("*.py"):
+    for file in PAGES_DIR.glob("d*.py"):
         page_name = file.stem
         server = server.with_app(path=f"/{page_name}", root=str(file))
         pages.append(page_name)

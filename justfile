@@ -20,7 +20,7 @@ demo:
 # Developp app locally
 [group('run')]
 start-api:
-    uv run uvicorn app.main:app --port 7860 --reload
+    uv run uvicorn app.main:app --port {{PORT}} --reload
 
 # Run tests
 [group('qa')]

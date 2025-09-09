@@ -419,8 +419,9 @@ def _(mo, resp):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""### Importance des caractéristiques""")
+def _(mo, resp):
+    if resp:
+        mo.md(r"""### Importance des caractéristiques""")
     return
 
 
@@ -485,31 +486,32 @@ def _(descriptions_tables, global_plot, local_plot, mo, resp, waterfall):
 def _(mo, resp, tabs):
     _output = None
     if resp:
-        if tabs.value == "Importance Locale":
-            _output = mo.md(
-                """
-                Le graphique ci-dessus montre l'importance des différentes caractéristiques **locales**.
+        with mo.status.spinner("Chargement des graphiques ..."):
+            if tabs.value == "Importance Locale":
+                _output = mo.md(
+                    """
+                    Le graphique ci-dessus montre l'importance des différentes caractéristiques **locales**.
 
-                Chaque barre représente une caractéristique avec son niveau d'importance.
-                """
-            )
-        elif tabs.value == "Correlation":
-            _output = mo.md(
-                """
-                Ce graphique montre comment chaque variable influence la prédiction du modèle pour ce client :
+                    Chaque barre représente une caractéristique avec son niveau d'importance.
+                    """
+                )
+            elif tabs.value == "Correlation":
+                _output = mo.md(
+                    """
+                    Ce graphique montre comment chaque variable influence la prédiction du modèle pour ce client :
 
-        - En rouge : les caractéristiques qui augmentent la probabilité de défaut.
-        - En bleu : celles qui la diminuent.
-                """
-            )
-        elif tabs.value == "Importance Globale":
-            _output = mo.md(
-                """
-                Le graphique ci-dessus montre l'importance des différentes caractéristiques **globales**.
+            - En rouge : les caractéristiques qui augmentent la probabilité de défaut.
+            - En bleu : celles qui la diminuent.
+                    """
+                )
+            elif tabs.value == "Importance Globale":
+                _output = mo.md(
+                    """
+                    Le graphique ci-dessus montre l'importance des différentes caractéristiques **globales**.
 
-                Chaque barre représente une caractéristique avec son niveau d'importance.
-                """
-            )
+                    Chaque barre représente une caractéristique avec son niveau d'importance.
+                    """
+                )
     _output  # pyright: ignore[reportUnusedExpression]
     return
 
@@ -543,37 +545,38 @@ def _(client_df, client_id, customers_df, feature_to_plot, mo, pd, px):
     _view = None
 
     if client_id and feature_to_plot.value:
-        feature = feature_to_plot.value
+        with mo.status.spinner("Chargement du graphique ..."):
+            feature = feature_to_plot.value
 
-        if pd.api.types.is_numeric_dtype(customers_df[feature]):
-            # Cas numérique
-            _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
-            _fig.add_vline(
-                x=float(client_df[feature].iloc[0]),
-                line_dash="dash",
-                line_color="red",
-                annotation_text="Client",
+            if pd.api.types.is_numeric_dtype(customers_df[feature]):
+                # Cas numérique
+                _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
+                _fig.add_vline(
+                    x=float(client_df[feature].iloc[0]),
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Client",
+                )
+            else:
+                # Cas catégoriel
+                _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
+                client_value = client_df[feature].iloc[0]
+                _fig.add_annotation(
+                    x=client_value,
+                    y=customers_df[feature].value_counts()[client_value],
+                    text="Client",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor="red",
+                    font={"color": "red", "size": 12},
+                )
+
+            _fig.update_layout(title_text=f"Distribution de {feature}", title_x=0.5)
+            _fig.update_traces(
+                marker_color="rgb(246,207,113)", marker_line_color="rgb(205,102,0)", marker_line_width=1.5, opacity=0.6
             )
-        else:
-            # Cas catégoriel
-            _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
-            client_value = client_df[feature].iloc[0]
-            _fig.add_annotation(
-                x=client_value,
-                y=customers_df[feature].value_counts()[client_value],
-                text="Client",
-                showarrow=True,
-                arrowhead=2,
-                arrowcolor="red",
-                font={"color": "red", "size": 12},
-            )
 
-        _fig.update_layout(title_text=f"Distribution de {feature}", title_x=0.5)
-        _fig.update_traces(
-            marker_color="rgb(246,207,113)", marker_line_color="rgb(205,102,0)", marker_line_width=1.5, opacity=0.6
-        )
-
-        _view = mo.ui.plotly(_fig)
+            _view = mo.ui.plotly(_fig)
     _view  # pyright: ignore[reportUnusedExpression]
     return
 
@@ -614,33 +617,34 @@ def _(client_df, customers_df, mo, px, selected_label):
     feature1, feature2 = selected_label.value
 
     if feature1 and feature2:
-        # Graphe avec l'ensemble des clients
-        _fig_bivariate = px.scatter(
-            customers_df, x=feature1, y=feature2, title=f"Analyse bi-variée entre {feature1} et {feature2}"
-        )
-        _fig_bivariate.update_layout(title_text=f"Analyse bi-variée entre {feature1} et {feature2}", title_x=0.5)
-        _fig_bivariate.update_traces(
-            marker_color="rgb(229,152,102)", marker_line_color="rgb(174,49,0)", marker_line_width=1.5, opacity=0.6
-        )
-
-        if not client_df.empty:
-            _fig_bivariate.add_scatter(
-                x=client_df[feature1],
-                y=client_df[feature2],
-                mode="markers+text",
-                text="Client",
-                textposition="top center",
-                marker={"color": "red", "size": 14, "line": {"color": "rgb(205,102,0)", "width": 1.5}},
-                name="Client actuel",
+        with mo.status.spinner("Chargement du graphique ..."):
+            # Graphe avec l'ensemble des clients
+            _fig_bivariate = px.scatter(
+                customers_df, x=feature1, y=feature2, title=f"Analyse bi-variée entre {feature1} et {feature2}"
+            )
+            _fig_bivariate.update_layout(title_text=f"Analyse bi-variée entre {feature1} et {feature2}", title_x=0.5)
+            _fig_bivariate.update_traces(
+                marker_color="rgb(229,152,102)", marker_line_color="rgb(174,49,0)", marker_line_width=1.5, opacity=0.6
             )
 
-        _text_explaination = mo.md(
-            f"""Le graphique ci-dessus montre la relation entre **{feature1}** et **{feature2}**
-            pour l'ensemble des clients.
-            🔴 Le point rouge indique la position du client sélectionné."""
-        )
+            if not client_df.empty:
+                _fig_bivariate.add_scatter(
+                    x=client_df[feature1],
+                    y=client_df[feature2],
+                    mode="markers+text",
+                    text="Client",
+                    textposition="top center",
+                    marker={"color": "red", "size": 14, "line": {"color": "rgb(205,102,0)", "width": 1.5}},
+                    name="Client actuel",
+                )
 
-        bi_varie_plot = mo.vstack([mo.ui.plotly(_fig_bivariate), _text_explaination])
+            _text_explaination = mo.md(
+                f"""Le graphique ci-dessus montre la relation entre **{feature1}** et **{feature2}**
+                pour l'ensemble des clients.
+                🔴 Le point rouge indique la position du client sélectionné."""
+            )
+
+            bi_varie_plot = mo.vstack([mo.ui.plotly(_fig_bivariate), _text_explaination])
     bi_varie_plot  # pyright: ignore[reportUnusedExpression]
     return
 

@@ -8,7 +8,7 @@ sdk_version: latest
 pinned: true
 license: mit
 app_file: app/main.py
-short_description: API et tableau de bord pour prédire le risque de défaut de crédit.
+short_description: API et dashboard pour prédire le risque de défaut de crédit.
 thumbnail: https://cdn-uploads.huggingface.co/production/uploads/6891c75202359d4e3846cbec/uMnppPBtSc7waPZhjrTMc.png
 ---
 

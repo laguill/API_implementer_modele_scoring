@@ -241,28 +241,31 @@ def _(client_id, customers_df, fc, mo, pd):
             ),
         })
 
-        user_info = fiche_dict  # noqa: F841  # pyright: ignore[reportUnusedVariable]
+        fiche_dict
     return (fiche_dict,)
 
 
 @app.cell
 def _(client_id, fiche_dict, mo):
     # Tab 1
-    tab_fetch = mo.ui.table(fiche_dict.value, label=f"Données client {client_id}")
+    if client_id:
+        tab_fetch = mo.ui.table(fiche_dict.value, label=f"Données client {client_id}")
     return (tab_fetch,)
 
 
 @app.cell
-def _(descriptions_tables, mo, tab_fetch):
-    get_tab, set_tab = mo.state("Voir les informations")
-    user_tabs = mo.ui.tabs(
-        {
-            "Voir les informations": tab_fetch,
-            "Descriptions": descriptions_tables,
-        },
-        value=get_tab(),
-        on_change=set_tab,
-    )
+def _(client_id, descriptions_tables, mo, tab_fetch):
+    user_tabs = None
+    if client_id:
+        get_tab, set_tab = mo.state("Voir les informations")
+        user_tabs = mo.ui.tabs(
+            {
+                "Voir les informations": tab_fetch,
+                "Descriptions": descriptions_tables,
+            },
+            value=get_tab(),
+            on_change=set_tab,
+        )
     user_tabs  # pyright: ignore[reportUnusedExpression]
     return
 
@@ -454,7 +457,7 @@ def _(fc, mo, pd, px, resp):
             marker_color="rgb(123,204,196)", marker_line_color="rgb(4,77,51)", marker_line_width=1.5, opacity=0.6
         )
         global_plot = mo.ui.plotly(fig_global).center()
-    return (global_plot,)  # pyright: ignore[reportPossiblyUnboundVariable]
+    return (global_plot,)
 
 
 @app.cell(hide_code=True)

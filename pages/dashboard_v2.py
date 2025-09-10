@@ -242,34 +242,37 @@ def _(client_id, customers_df, fc, mo, pd, reload_btn):
         })
 
         fiche_dict  # pyright: ignore[reportUnusedVariable]
-    return client_df, colonnes_a_afficher, fiche_dict  # pyright: ignore[reportPossiblyUnboundVariable]
+    return client_df, colonnes_a_afficher, fiche_dict
 
 
 @app.cell
 def _(client_id, fiche_dict, mo, reload_btn):
-    # Tab 1
-    tab_fetch = mo.vstack([mo.ui.table(fiche_dict.value, label=f"Données client {client_id}"), reload_btn])
+    if client_id:
+        # Tab 1
+        tab_fetch = mo.vstack([mo.ui.table(fiche_dict.value, label=f"Données client {client_id}"), reload_btn])
 
-    # Tab 2: Update user data (your fiche_dict UI)
-    tab_update = fiche_dict.form(
-        submit_button_label="Mettre à jour les informations",
-        loading=False,
-    )
+        # Tab 2: Update user data (your fiche_dict UI)
+        tab_update = fiche_dict.form(
+            submit_button_label="Mettre à jour les informations",
+            loading=False,
+        )
     return tab_fetch, tab_update
 
 
 @app.cell
-def _(descriptions_tables, mo, tab_fetch, tab_update):
-    get_tab, set_tab = mo.state("Voir les informations")
-    user_tabs = mo.ui.tabs(
-        {
-            "Voir les informations": tab_fetch,
-            "Mettre à jour": tab_update,
-            "Descriptions": descriptions_tables,
-        },
-        value=get_tab(),
-        on_change=set_tab,
-    )
+def _(client_id, descriptions_tables, mo, tab_fetch, tab_update):
+    user_tabs = None
+    if client_id:
+        get_tab, set_tab = mo.state("Voir les informations")
+        user_tabs = mo.ui.tabs(
+            {
+                "Voir les informations": tab_fetch,
+                "Mettre à jour": tab_update,
+                "Descriptions": descriptions_tables,
+            },
+            value=get_tab(),
+            on_change=set_tab,
+        )
     user_tabs  # pyright: ignore[reportUnusedExpression]
     return
 

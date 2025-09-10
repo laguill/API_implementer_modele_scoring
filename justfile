@@ -20,7 +20,7 @@ demo:
 # Developp app locally
 [group('run')]
 start-api:
-    uv run uvicorn app.main:app --port {{PORT}} --reload
+    uv run uvicorn app.main:app   --host 0.0.0.0   --port 7860   --reload   --reload-exclude "pages/*.py"   --reload-exclude "tests/*"   --reload-exclude ".venv/*"
 
 # Run tests
 [group('qa')]

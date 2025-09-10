@@ -105,10 +105,10 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    reload_btn = mo.ui.run_button(  # noqa: F841
+    reload_btn = mo.ui.run_button(
         label="Recharger les données",
     )
-    return
+    return (reload_btn,)
 
 
 @app.cell
@@ -135,8 +135,8 @@ def _(mo):
 
 
 @app.cell
-def _(client_id, customers_df, fc, mo, pd):
-    if client_id:
+def _(client_id, customers_df, fc, mo, pd, reload_btn):
+    if client_id or reload_btn.value:
         _data = fc.get_client_info(client_id)
         client_df = pd.DataFrame([_data])
 
@@ -145,7 +145,7 @@ def _(client_id, customers_df, fc, mo, pd):
         client_df["YEARS_EMPLOYED"] = round(client_df["DAYS_EMPLOYED"] / -365)
         client_df = client_df.drop(["DAYS_BIRTH", "DAYS_EMPLOYED"], axis=1)
 
-        colonnes_a_afficher = [  # noqa: F841
+        colonnes_a_afficher = [
             "CODE_GENDER",
             "AGE",
             "CNT_CHILDREN",
@@ -241,29 +241,50 @@ def _(client_id, customers_df, fc, mo, pd):
             ),
         })
 
-        user_info = fiche_dict  # noqa: F841  # pyright: ignore[reportUnusedVariable]
-    return (fiche_dict,)
+        fiche_dict  # pyright: ignore[reportUnusedVariable]
+    return client_df, colonnes_a_afficher, fiche_dict  # pyright: ignore[reportPossiblyUnboundVariable]
 
 
 @app.cell
-def _(client_id, fiche_dict, mo):
+def _(client_id, fiche_dict, mo, reload_btn):
     # Tab 1
-    tab_fetch = mo.ui.table(fiche_dict.value, label=f"Données client {client_id}")
-    return (tab_fetch,)
+    tab_fetch = mo.vstack([mo.ui.table(fiche_dict.value, label=f"Données client {client_id}"), reload_btn])
+
+    # Tab 2: Update user data (your fiche_dict UI)
+    tab_update = fiche_dict.form(
+        submit_button_label="Mettre à jour les informations",
+        loading=False,
+    )
+    return tab_fetch, tab_update
 
 
 @app.cell
-def _(descriptions_tables, mo, tab_fetch):
+def _(descriptions_tables, mo, tab_fetch, tab_update):
     get_tab, set_tab = mo.state("Voir les informations")
     user_tabs = mo.ui.tabs(
         {
             "Voir les informations": tab_fetch,
+            "Mettre à jour": tab_update,
             "Descriptions": descriptions_tables,
         },
         value=get_tab(),
         on_change=set_tab,
     )
     user_tabs  # pyright: ignore[reportUnusedExpression]
+    return
+
+
+@app.cell
+def _(client_id, fc, reload_btn, tab_update):
+    if tab_update.value is not None:
+        update_dict = tab_update.value.copy()
+        update_dict["DAYS_BIRTH"] = -365 * update_dict["AGE"]
+        update_dict["DAYS_EMPLOYED"] = -365 * update_dict["YEARS_EMPLOYED"]
+        # Optionally remove the derived columns if needed
+        del update_dict["AGE"]
+        del update_dict["YEARS_EMPLOYED"]
+        fc.update_client_info(client_id, update_dict)
+        reload_btn.value = True
     return
 
 
@@ -454,7 +475,7 @@ def _(fc, mo, pd, px, resp):
             marker_color="rgb(123,204,196)", marker_line_color="rgb(4,77,51)", marker_line_width=1.5, opacity=0.6
         )
         global_plot = mo.ui.plotly(fig_global).center()
-    return (global_plot,)  # pyright: ignore[reportPossiblyUnboundVariable]
+    return (global_plot,)
 
 
 @app.cell(hide_code=True)
@@ -503,6 +524,139 @@ def _(mo, resp, tabs):
                     """
                 )
     _output  # pyright: ignore[reportUnusedExpression]
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## Caractéristiques client
+
+    Cette section vous permet de visualiser les caractéristiques d'un client et de les comparer à l'ensemble des clients.
+    """
+    )
+    return
+
+
+@app.cell
+def _(colonnes_a_afficher, mo, resp):
+    feature_to_plot = None
+    if resp:
+        # Sélecteur pour choisir la caractéristique à visualiser
+        feature_to_plot = mo.ui.dropdown(
+            options=list(colonnes_a_afficher), label="Choisissez une caractéristique à visualiser"
+        )
+    feature_to_plot  # pyright: ignore[reportUnusedExpression]
+    return (feature_to_plot,)
+
+
+@app.cell
+def _(client_df, client_id, customers_df, feature_to_plot, mo, pd, px):
+    _view = None
+
+    if client_id and feature_to_plot.value:
+        with mo.status.spinner("Chargement du graphique ..."):
+            feature = feature_to_plot.value
+
+            if pd.api.types.is_numeric_dtype(customers_df[feature]):
+                # Cas numérique
+                _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
+                _fig.add_vline(
+                    x=float(client_df[feature].iloc[0]),
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Client",
+                )
+            else:
+                # Cas catégoriel
+                _fig = px.histogram(customers_df, x=feature, title=f"Distribution de {feature}")
+                client_value = client_df[feature].iloc[0]
+                _fig.add_annotation(
+                    x=client_value,
+                    y=customers_df[feature].value_counts()[client_value],
+                    text="Client",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor="red",
+                    font={"color": "red", "size": 12},
+                )
+
+            _fig.update_layout(title_text=f"Distribution de {feature}", title_x=0.5)
+            _fig.update_traces(
+                marker_color="rgb(246,207,113)", marker_line_color="rgb(205,102,0)", marker_line_width=1.5, opacity=0.6
+            )
+
+            _view = mo.ui.plotly(_fig)
+    _view  # pyright: ignore[reportUnusedExpression]
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""### Analyse bi-variée entre deux caractéristiques""")
+    return
+
+
+@app.cell
+def _(mo):
+    combinations_interessantes = {
+        "Revenu vs Crédit": ("AMT_INCOME_TOTAL", "AMT_CREDIT_x"),
+        "Revenu vs Annuité": ("AMT_INCOME_TOTAL", "AMT_ANNUITY"),
+        "Crédit vs Annuité": ("AMT_CREDIT_x", "AMT_ANNUITY"),
+        "Âge vs Crédit": ("AGE", "AMT_CREDIT_x"),
+        "Âge vs Revenu": ("AGE", "AMT_INCOME_TOTAL"),
+        "Ancienneté emploi vs Revenu": ("YEARS_EMPLOYED", "AMT_INCOME_TOTAL"),
+        "Ancienneté emploi vs Crédit": ("YEARS_EMPLOYED", "AMT_CREDIT_x"),
+        "Score externe 2 vs Score externe 3": ("EXT_SOURCE_2", "EXT_SOURCE_3"),
+        "Dernier crédit vs Montant crédit": ("DAYS_CREDIT_mean", "AMT_CREDIT_x"),
+        "Nombre d’enfants vs Revenu": ("CNT_CHILDREN", "AMT_INCOME_TOTAL"),  # noqa: RUF001
+    }
+
+    selected_label = mo.ui.dropdown(
+        options=combinations_interessantes,
+        label="Choisissez une analyse :",
+    )
+
+    mo.hstack([selected_label])
+    return (selected_label,)
+
+
+@app.cell
+def _(client_df, customers_df, mo, px, selected_label):
+    bi_varie_plot = None
+    feature1, feature2 = selected_label.value
+
+    if feature1 and feature2:
+        with mo.status.spinner("Chargement du graphique ..."):
+            # Graphe avec l'ensemble des clients
+            _fig_bivariate = px.scatter(
+                customers_df, x=feature1, y=feature2, title=f"Analyse bi-variée entre {feature1} et {feature2}"
+            )
+            _fig_bivariate.update_layout(title_text=f"Analyse bi-variée entre {feature1} et {feature2}", title_x=0.5)
+            _fig_bivariate.update_traces(
+                marker_color="rgb(229,152,102)", marker_line_color="rgb(174,49,0)", marker_line_width=1.5, opacity=0.6
+            )
+
+            if not client_df.empty:
+                _fig_bivariate.add_scatter(
+                    x=client_df[feature1],
+                    y=client_df[feature2],
+                    mode="markers+text",
+                    text="Client",
+                    textposition="top center",
+                    marker={"color": "red", "size": 14, "line": {"color": "rgb(205,102,0)", "width": 1.5}},
+                    name="Client actuel",
+                )
+
+            _text_explaination = mo.md(
+                f"""Le graphique ci-dessus montre la relation entre **{feature1}** et **{feature2}**
+                pour l'ensemble des clients.
+                🔴 Le point rouge indique la position du client sélectionné."""
+            )
+
+            bi_varie_plot = mo.vstack([mo.ui.plotly(_fig_bivariate), _text_explaination])
+    bi_varie_plot  # pyright: ignore[reportUnusedExpression]
     return
 
 
